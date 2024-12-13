@@ -1,0 +1,568 @@
+﻿Note: Commands to run the program (no need to write in record)
+
+Step 1: Type the command in the Terminal
+
+java -jar NSG2.1.jar
+
+Step 2: In the new window
+
+Scenario-> New wired scenario (this creates your .tcl file)
+Gedit Exp.tcl  (to edit your tcl file)
+Gedit Exp.awk (to create and edit your awk file)
+
+---------------------------------------------------------------
+
+ PROGRAM-  I  
+
+TITLE 
+
+Implement three nodes point - to - point network with duplex links between them. Set the queue 
+size, vary the bandwidth and find the number of packets dropped.
+
+PROGRAM 
+
+Exp1.tcl
+
+#================
+# Simulation parameters setup
+
+#==================
+set val(stop)  10.0 ;# time of simulation end
+
+#=================
+# Initialization
+#=================
+#Create a ns simulator 
+set ns [new Simulator]
+
+#Open the NS trace file
+set tracefile [open out.tr w]
+$ns trace-all $tracefile
+
+#Open the set NAM tracefile 
+
+
+
+set namfile [open out.nam w]
+$ns namtrace-all $namfile
+
+#================
+# Nodes Definition
+#=================
+#Create 3 nodes 
+set n0 [$ns node] 
+set n1 [$ns node] 
+set n2 [$ns node] 
+
+#==================
+# Links Definition
+#=================
+#Createlinks between nodes
+$ns duplex-link $n0 $n1 1.0Mb 1Oms DropTail
+$ns queue-limit $n0 $n1 5
+$ns duplex-link $n2 $n1 1.0Mb lOms DropTail
+$ns queue-limit $n2 $n1 5
+
+#Give node position (for NAM)
+$ns duplex-link-op $n0 $n1 orient right-up
+$ns duplex-link-op $n2 $n1 orient left-up
+
+#=================
+# Agents Definition
+#=================
+
+#Setup a TCP connection
+
+set tcp4 [new Agent/TCP] 
+$ns attach-agent $n0 $tcp4
+set sink5 [new Agent/TCPSink]
+$ns attach-agent $n2 $sink5 
+$ns connect $tcp4 $sink5
+$tcp4 set packetSize_ 1500
+
+ #=================
+# Applications Definition
+#=================
+
+
+
+#Setup a FTP Application over TCP connection
+set ftp2 [new Application/FTP]
+$ns at 1.0 "$ftp2 send"
+$ns at 2.0 "$ftp2 send"
+
+#=================
+
+# Termination
+#=================
+
+#Define a 'finish' procedure 
+proc finish {} { 
+
+global ns tracefile namfile
+$ns flush-trace 
+close $tracefile 
+close $namfile 
+exec nam out.nam &
+exit 0
+}
+
+$ns at $val(stop) "$ns nam-end-wireless $val(stop)"
+$ns at $val(stop) "finish"
+$ns at $val(stop) "puts \"done\" ; $ns halt"
+$ns run
+
+Note: To run the tcl code type the following command in terminal
+
+ns Exp1.tcl
+
+Expl.awk
+
+BEGIN{
+Count=0;
+
+}
+{ 
+
+if($4=="d")
+{
+
+Count++;
+}
+
+}
+
+
+
+END{
+printf("No. of packets dropped = %d",Count);
+}
+
+Note: To run the awk code type the following command in terminal
+
+awk -f expl.awk out.tr
+
+
+
+Canara Engineering College, Banjanapadavu Computer Networks(BCS502)
+
+Output
+Exp1.tcl
+
+Now click on play forward and see the packets moving from sender Node n0 to Receiver Node n2
+
+.,
+
+Exp1.awk
+
+ISE Dept. 5
+
+
+
+Canara Engineering College, Banjanapadavu Computer Networks(BCS502)
+
+---------------------------------------------------------------------------------------------------------------------
+
+PROGRAM-2
+
+TITLE 
+
+Implement transmission of ping messages/trace route over a network topology consisting 
+of 6 nodes and find the number of packets dropped due to congestion.
+
+PROGRAM 
+
+Exp2.tcl
+
+#================
+# Simulation parameters setup
+
+#==================
+set val(stop)  10.0 ;# time of simulation end
+
+#=================
+# Initialization
+#=================
+#Create a ns simulator 
+set ns [new Simulator]
+
+#Open the NS trace file
+set tracefile [open out.tr w]
+$ns trace-all $tracefile
+
+#Open the set NAM tracefile 
+set namfile [open out.nam w]
+$ns namtrace-all $namfile
+
+#================
+# Nodes Definition
+#=================
+#Create 6 nodes 
+
+ISE Dept. 6
+
+
+
+Canara Engineering College, Banjanapadavu Computer Networks(BCS502)
+
+set n0 [$ns node] 
+set n1 [$ns node] 
+set n2 [$ns node] 
+set n3 [$ns node] 
+set n4 [$ns node] 
+set n5 [$ns node] 
+
+#==================
+# Links Definition
+#=================
+#Createlinks between nodes
+$ns duplex-link $n0 $n3 100.0Mb 1Oms DropTail
+$ns queue-limit $n0 $n3 50
+$ns duplex-link $nl $n3 100.0Mb lOms DropTail
+$ns queue-limit $nl $n3 50
+$ns duplex-link $n2 $n3 100.0Mb 1Oms DropTail
+$ns queue-limit $n2 $n3 50
+$ns duplex-link $n3 $n4 100.0Mb lOms DropTail
+$ns queue-limit $n3 $n4 0
+$ns duplex-link $n3 $n5 100.0Mb 1Oms DropTail
+$ns queue-limit $n3 $n5 50
+
+#Give node position (for NAM)
+$ns duplex-link-op $n0 $n3 orient right-down
+$ns duplex-link-op $n1 $n3 orient right
+$ns duplex-link-op $n2 $n3 orient right-up
+$ns duplex-link-op $n3 $n4 orient right-up
+$ns duplex-link-op $n3 $n5 orient right-down
+
+#=================
+# Agents Definition
+#=================
+
+Agent/Ping instproc recv {from rtt} {
+$self instvar node_
+puts "Node [$node_ id] receives response from 
+$from with RTT=$rtt ms"}
+
+ISE Dept. 7
+
+
+
+Canara Engineering College, Banjanapadavu Computer Networks(BCS502)
+
+#Setup a TCP connection 
+set p0 [newAget/Ping] 
+$ns attachagent $n0 $p0 
+set p3 [new Agent/Ping] 
+$ns attach-agent $n4 $p3
+$ns connect $p0 $p3
+$p0 set packetSize_ 1500
+
+#Setup a TCP connection 
+set p1 [new Agent/Ping] 
+$ns attach agent $nl $pl 
+set p4 [new Agent/Ping] 
+$ns attach-agent $n5 $p4
+$ns connect $p1 $p4
+$pl set packetSize_ 1500
+
+ #=================
+# Applications Definition
+#=================
+$ns at 1.0 "$p0 send"
+$ns at 1.1 "$p0 send"
+$ns at 1.2 "$p0 send"
+$ns at 1.3 "$p0 send"
+$ns at 1.0 "$pl send"
+$ns at 1.1 "$p1 send"
+$ns at 1.2 "$pl send"
+$ns at 1.3 "$p1 send"
+
+#=================
+# Termination
+#================
+
+#Define a 'finish' procedure 
+proc finish {} { 
+
+global ns tracefile namfile
+$ns flush-trace 
+close $tracefile 
+close $namfile 
+exec nam out.nam &
+exit 0
+}
+
+$ns at $val(stop) "$ns nam-end-wireless $val(stop)"
+$ns at $val(stop) "finish"
+$ns at $val(stop) "puts \"done\" ; $ns halt"
+$ns run
+
+ISE Dept. 8
+
+
+
+Canara Engineering College, Banjanapadavu Computer Networks(BCS502)
+
+Exp2.awk
+
+BEGIN{
+Count=0;
+
+}
+{
+
+if($1=="d")
+{
+
+Count++;
+}
+
+}
+E
+N
+D
+{
+printf("No. of packets dropped = %d", Count);
+}
+
+Output
+ Exp2.tcl 
+
+ISE Dept. 9
+
+
+
+Canara Engineering College, Banjanapadavu Computer Networks(BCS502)
+
+Exp2.awk
+--------------------------------------------------------------------------------------------------
+PROGRAM-3
+TITLE 
+Implement an Ethernet LAN using n nodes and set multiple traffic nodes and plot congestion 
+window for different source / destination.
+
+PROGRAM 
+
+Exp3.tcl
+
+#This script is created by NSG2 betal
+
+# <http://wushoupang.googlepages.com/nsg>
+
+#=========================
+#Simulation parameters setup
+#=========================
+
+set val(stop) 10.0; #time of simulation end
+
+#=========================
+
+ISE Dept. 1
+0
+
+
+
+Canara Engineering College, Banjanapadavu Computer Networks(BCS502)
+
+#Initialization
+#=========================
+
+#Create a ns simulator
+set ns [new Simulator]
+
+#Open the NS trace file
+set tracefile [open out.tr w]
+$ns trace-all $tracefile
+
+#Open the NAM trace file
+set namfile [open out.nam w]
+$ns namtrace-all $namfile
+
+#=========================
+#Nodes Definition
+#=========================
+
+#Create 6 nodes
+
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+set n3 [$ns node]
+set n4 [$ns node]
+set n5 [$ns node]
+
+#=========================
+#Links Definition
+#=========================
+
+#Createlinks between nodes
+
+$ns duplex-link $n0 $n2 100.0Mb 10ms DropTail
+$ns queue-limit $n0 $n2 50
+$ns duplex-link $n1 $n2 100.0Mb 10ms DropTail
+$ns queue-limit $nl $n2 50
+$ns duplex-link $n2 $n3 100.0Mb 10ms Dropiail
+$ns queue-limit $n2 $n3 50
+
+set lan [$ns newlan "$n3 $n4 $n5" 1mb 40ms LLQueue/DropTail Mac/802 3 channel]
+
+#Give node position (for NAM)
+
+$ns duplex-link-op $n0 $n2 orient right-down
+$ns duplex-link-op $nl $n2 orient right-up
+
+ISE Dept. 1
+1
+
+
+
+Canara Engineering College, Banjanapadavu Computer Networks(BCS502)
+
+$ns duplex-link-op $n2 $n3 orient right
+
+#=========================
+#Agents Definition
+#=========================
+
+#Setup a TCP connection
+
+set tcp0 [new Agent/TCP]
+$ns attach-agent $n0 $tcp0
+set sink2 [new Agent/TCPSink] 
+$ns attach-agent $n4 $sink2
+$ns connect $tcp0 $sink2
+$tcp0 set packetSize_ 1500
+
+#Setup a TCP/Reno connection
+
+set tcpl [new Agent/TCP/Reno]
+$ns attach-agent $n1 $tcp1
+set sink3 [new Agent/TCPSink] 
+$ns attach-agent $n5 $sink3
+$ns connect $tcp1 $sink3
+$tcp1 set packetSize_ 1500
+
+#=========================
+#Applications Definition
+#=========================
+
+#Setup a FTP Application over TCP connection
+
+set ftp0 [new Application/FTP]
+$ftp0 attach-agent $tcp0 
+$ns at 1.0 "$ftp0 start"
+$ns at 2.0 "$ftp0 stop"
+
+#Setup a FTP Application over TCP/Reno connection
+
+set ftp1 [new Application/FTP]
+$ftp1 attach-agent $tcp1 
+$ns at 1.0 "$ftp1 start"
+$ns at 2.0 "$ftp1 stop"
+
+set fl [open fl.tr w]
+$tcp0 attach $f1
+
+ISE Dept. 1
+2
+
+
+
+Canara Engineering College, Banjanapadavu Computer Networks(BCS502)
+
+set f2 [open f2.tr w]
+$tcp1 attach $f2
+
+$tcp0 trace cwnd_
+$tcp1 trace cwnd_
+
+#=========================
+#Termination
+#=========================
+
+#Define a 'finish' procedure
+
+proc finish {} {
+global ns tracefile namfile
+$ns flush-trace
+close $tracefile
+close $namfile 
+exec nam out.nam &
+exit 0
+
+}
+Sns at $val(stop) "$ns nam-end wireless $val(stop)"
+Sns at $val(stop) "finish"
+Sns at $val(stop) "puts \"done\" ; $ns halt"
+$ns run
+
+Exp3.awk
+
+BEGIN{
+}
+{
+
+If(“$6==cwnd_”)
+{
+
+printf("%f'\t%f\n", $1, $7);
+}
+
+}
+END{
+}
+
+Output
+
+ISE Dept. 1
+3
+
+
+
+Canara Engineering College, Banjanapadavu Computer Networks(BCS502)
+
+ Exp3.tcl 
+
+Exp3.awk 
+
+ Run the Awk code by the 
+
+command 
+
+awk-f exp3.awk fl.tr
+awk-f exp3.awk f2.tr
+
+ We need the xgraph so assign the awk code as awk -f exp3.awk 
+fl.tr>a awk -f exp3.awk f2.tr>b
+
+ Next to get the xgraph the command is 
+xgraph a
+
+ISE Dept. 1
+4
+
+
+
+Canara Engineering College, Banjanapadavu Computer Networks(BCS502)
+
+xgraph b
+
+                 
+
+Finally comparing both
+xgraph ab
+
+   
+
+ISE Dept. 1
+5
+
+
+
+Canara Engineering College, Banjanapadavu Computer Networks(BCS502)
+
+JI[
+
+ J     
+
+ISE Dept. 16
